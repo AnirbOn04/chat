@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { FaUserAlt, FaLock } from "react-icons/fa";
 import { MdDriveFileRenameOutline, MdEmail } from "react-icons/md";
+import { doCreateUserWithEmailAndPassword } from '../../firebase/auth';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
 import "./RegisterForm.css";
 
 const RegisterForm = () => {
@@ -8,29 +11,28 @@ const RegisterForm = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(null); // State for error message
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const navigate = useNavigate(); // Initialize useNavigate hook
 
-  const handleFullNameChange = (e) => {
-    setFullName(e.target.value);
-  };
+  const handleFullNameChange = (e) => setFullName(e.target.value);
+  const handleEmailChange = (e) => setEmail(e.target.value);
+  const handleUsernameChange = (e) => setUsername(e.target.value);
+  const handlePasswordChange = (e) => setPassword(e.target.value);
+  const handleModalClose = () => setIsModalOpen(false);
 
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const handleUsernameChange = (e) => {
-    setUsername(e.target.value);
-  };
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Implement your registration logic here
 
-    console.log("Registering with:", fullName, email, username, password);
+    try {
+      await doCreateUserWithEmailAndPassword(email, password);
+      console.log("User registered successfully");
+      navigate('/'); // Navigate to login page after successful signup
+    } catch (error) {
+      console.error("Registration error:", error.message);
+      setError(error.message); // Set error message
+      setIsModalOpen(true); // Open modal
+    }
   };
 
   return (
@@ -84,6 +86,17 @@ const RegisterForm = () => {
 
         <button type="submit">Sign Up</button>
       </form>
+
+      {/* Modal for displaying error message */}
+      <Modal isOpen={isModalOpen} onClose={handleModalClose}>
+        <ModalContent>
+          <ModalHeader>Error</ModalHeader>
+          <ModalBody>Email already exists</ModalBody>
+          <ModalFooter>
+            <Button onClick={handleModalClose} color="primary">OK</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

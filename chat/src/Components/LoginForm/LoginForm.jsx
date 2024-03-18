@@ -1,31 +1,33 @@
 import React, { useState } from "react";
 import './LoginForm.css';
-// import { FaUserAlt } from "react-icons/fa";
-import { FaLock } from "react-icons/fa6";
 import { MdEmail } from "react-icons/md";
-import { Link } from 'react-router-dom';
+import { FaLock } from "react-icons/fa";
+import { Link, useNavigate } from 'react-router-dom';
+import { doSignInWithEmailAndPassword } from "../../firebase/auth";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
 
 const LoginForm = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [rememberMe, setRememberMe] = useState(false);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleEmailChange = (e) => {
-        setEmail(e.target.value);
-    };
+    const handleEmailChange = (e) => setEmail(e.target.value);
+    const handlePasswordChange = (e) => setPassword(e.target.value);
+    const handleRememberMeChange = () => setRememberMe(!rememberMe);
+    const handleModalClose = () => setIsModalOpen(false);
 
-    const handlePasswordChange = (e) => {
-        setPassword(e.target.value);
-    };
-
-    const handleRememberMeChange = () => {
-        setRememberMe(!rememberMe);
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Implement your login logic here
-        console.log("Logging in with:", email, password);
+        try {
+            await doSignInWithEmailAndPassword(email, password);
+            navigate("/dashboard");
+        } catch (error) {
+            setError("Invalid email or password. Please try again.");
+            setIsModalOpen(true);
+        }
     };
 
     return (
@@ -62,7 +64,7 @@ const LoginForm = () => {
                         />
                         Remember me
                     </label>
-                    <Link to="/forgot">Forgot Password</Link>
+                    <Link to="/forgot">Forgot Password?</Link>
                 </div>
 
                 <button type="submit">Login</button>
@@ -72,6 +74,15 @@ const LoginForm = () => {
                     </p>
                 </div>
             </form>
+            <Modal isOpen={isModalOpen} onClose={handleModalClose}>
+                <ModalContent>
+                    <ModalHeader>Error</ModalHeader>
+                    <ModalBody>{error}</ModalBody>
+                    <ModalFooter>
+                        <Button onClick={handleModalClose} color="primary">OK</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </div>
     );
 };
